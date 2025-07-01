@@ -1,0 +1,184 @@
+sequence:
+  - variables:
+      threshold_temp: 10
+      cooling_work_temp: 25
+      heating_work_temp: 16
+      cooling_night_temp: 21
+      heating_night_temp: 16
+      cooling_default_temp: 23.5
+      heating_default_temp: 21.5
+      forecast_threshold_temp: 18
+    alias: Define Variables
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.family_status
+            state: "off"
+        sequence:
+          - action: climate.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: climate.nest_learning_thermostat
+            alias: Turn off HVAC
+        alias: If Familty Status is Away → Turn off HVAC
+      - conditions:
+          - condition: state
+            entity_id: weather.winnipeg
+            state: unavailable
+        sequence:
+          - action: climate.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: climate.nest_learning_thermostat
+            alias: Turn off HVAC due to unavailable weather data
+        alias: If Weather Data Unavailable → Turn off HVAC
+    default:
+      - alias: Set HVAC temperature based on outside temperature
+        if:
+          - alias: Outside is Warm
+            condition: template
+            value_template: "  {{ states('sensor.winnipeg_temperature') | float > threshold_temp }}"
+        then:
+          - alias: Apply Cooling Strategy
+            choose:
+              - conditions:
+                  - condition: numeric_state
+                    entity_id: sensor.winnipeg_temperature
+                    below: sensor.nest_learning_thermostat_temperature
+                    alias: If outside temperature < inside temperature
+                sequence:
+                  - alias: Send SMS to open windows when natural cooling is possible
+                    if:
+                      - condition: device
+                        device_id: d9dd33299705b38f6cd49a948c1bbd19
+                        domain: climate
+                        entity_id: 4e971f8b9c7a08e3417bd5b5e6c271e0
+                        type: is_hvac_mode
+                        hvac_mode: cool
+                        alias: Nest Learning Thermostat is set to COOL
+                      - alias: Indoor temperature > {{cooling_day_temp}}
+                        condition: template
+                        value_template: >
+                          {{
+                          states('sensor.nest_learning_thermostat_temperature')
+                          | float(99) > cooling_day_temp }}
+                    then:
+                      - data:
+                          title: Open windows to cool house
+                          message: >
+                            AC is off. Outdoor temp ({{
+                            state_attr('weather.winnipeg_forecast','temperature')
+                            | float(99) | round(1) }}°C) is lower than indoor
+                            ({{
+                            states('sensor.nest_learning_thermostat_temperature')
+                            | float(99) | round(1) }}°C), which is also above
+                            desired temp ({{ cooling_night_temp }}°C).
+                        action: notify.mobile_app_vadimiphone
+                        alias: Send SMS to open windows to cool the house
+                  - action: climate.turn_off
+                    metadata: {}
+                    data: {}
+                    target:
+                      entity_id: climate.nest_learning_thermostat
+                    alias: Turn off HVAC
+                alias: Outside Cooler than Inside → Turn off HVAC
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.worktime_sensor
+                    state: "on"
+                sequence:
+                  - target:
+                      entity_id: climate.nest_learning_thermostat
+                    data:
+                      temperature: "{{ cooling_work_temp }}"
+                      hvac_mode: cool
+                    action: climate.set_temperature
+                    alias: Set HVAC to {{cooling_work_temp}}
+                alias: Worktime →  Set HVAC to {{cooling_work_temp}}
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.nighttime_sensor
+                    state: "on"
+                sequence:
+                  - target:
+                      entity_id: climate.nest_learning_thermostat
+                    data:
+                      temperature: "{{ cooling_night_temp }}"
+                      hvac_mode: cool
+                    action: climate.set_temperature
+                    alias: Set HVAC to {{cooling_night_temp}}
+                alias: Nighttime →  Set HVAC to {{cooling_night_temp}}
+            default:
+              - target:
+                  entity_id: climate.nest_learning_thermostat
+                data:
+                  temperature: "{{ cooling_default_temp }}"
+                  hvac_mode: cool
+                action: climate.set_temperature
+                alias: Set HVAC Temperature to {{cooling_default_temp}}
+        else:
+          - alias: Apply Heating Strategy
+            choose:
+              - conditions:
+                  - alias: If Forecast High Temperature > {{forecast_threshold_temp}}
+                    condition: template
+                    value_template: >-
+                      {{ (states('sensor.winnipeg_high_today') | float) >
+                      (forecast_threshold_temp | float) }}
+                sequence:
+                  - action: climate.turn_off
+                    metadata: {}
+                    data: {}
+                    target:
+                      entity_id: climate.nest_learning_thermostat
+                    alias: Turn off HVAC
+                alias: Weather Forecast is Warm → Turn off HVAC
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.worktime_sensor
+                    state: "on"
+                  - condition: not
+                    conditions:
+                      - alias: If Seun is Home
+                        condition: state
+                        entity_id: device_tracker.seuns_iphone
+                        state: home
+                    alias: If Seun is Away
+                sequence:
+                  - target:
+                      entity_id: climate.nest_learning_thermostat
+                    data:
+                      temperature: "{{ heating_work_temp }}"
+                      hvac_mode: heat
+                    action: climate.set_temperature
+                    alias: Set HVAC to {{heating_work_temp}}
+                alias: >-
+                  Worktime When Seun is Away →  Set HVAC to
+                  {{heating_work_temp}}
+              - conditions:
+                  - condition: state
+                    entity_id: binary_sensor.nighttime_sensor
+                    state: "on"
+                sequence:
+                  - target:
+                      entity_id: climate.nest_learning_thermostat
+                    data:
+                      temperature: "{{ heating_night_temp }}"
+                      hvac_mode: heat
+                    action: climate.set_temperature
+                    alias: Set HVAC to {{heating_night_temp}}
+                alias: Nighttime →  Set HVAC to {{heating_night_temp}}
+            default:
+              - target:
+                  entity_id: climate.nest_learning_thermostat
+                data:
+                  temperature: "{{ heating_default_temp }}"
+                  hvac_mode: heat
+                action: climate.set_temperature
+                alias: Set HVAC Temperature to {{heating_default_temp}}
+alias: Adjust Nest Thermostat
+description: >-
+  Adjust HVAC based on family status, weather forecast, outside temperature and
+  a variety of other conditions.
