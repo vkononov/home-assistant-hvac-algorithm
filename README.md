@@ -15,20 +15,21 @@ The script automatically adjusts HVAC settings based on multiple conditions:
 
 ## Configuration Variables
 
-| Variable                  |   Default | Description                                                           |
-|---------------------------|----------:|-----------------------------------------------------------------------|
-| `threshold_temp`          |      10°C | Temperature threshold for switching between heating and cooling modes |
-| `cooling_work_temp`       |      25°C | Cooling temperature during work hours                                 |
-| `heating_work_temp`       |      16°C | Heating temperature during work hours (when away)                     |
-| `cooling_night_temp`      |      21°C | Cooling temperature during nighttime                                  |
-| `heating_night_temp`      |      16°C | Heating temperature during nighttime                                  |
-| `cooling_default_temp`    |    23.5°C | Default cooling temperature                                           |
-| `heating_default_temp`    |    21.5°C | Default heating temperature                                           |
-| `forecast_threshold_temp` |      18°C | Forecast temperature threshold for disabling heating                  |
-| `cooling_nighttime`       |  19:00:00 | Time when cooling nighttime schedule begins                           |
-| `heating_nighttime`       |  22:00:00 | Time when heating nighttime schedule begins                           |
-| `cooling_daytime`         |  08:00:00 | Time when cooling daytime schedule begins                             |
-| `heating_daytime`         |  07:00:00 | Time when heating daytime schedule begins                             |
+| Variable                       |  Default | Description                                                           |
+|--------------------------------|---------:|-----------------------------------------------------------------------|
+| `threshold_temp`               |     10°C | Temperature threshold for switching between heating and cooling modes |
+| `cooling_work_temp`            |     25°C | Cooling temperature during work hours                                 |
+| `heating_work_temp`            |     16°C | Heating temperature during work hours (when away)                     |
+| `cooling_night_temp`           |     21°C | Cooling temperature during nighttime                                  |
+| `heating_night_temp`           |     16°C | Heating temperature during nighttime                                  |
+| `cooling_default_temp`         |   23.5°C | Default cooling temperature                                           |
+| `heating_default_temp`         |   21.5°C | Default heating temperature                                           |
+| `forecast_threshold_low_temp`  |      5°C | Forecast low temperature threshold for disabling heating              |
+| `forecast_threshold_high_temp` |     15°C | Forecast high temperature threshold for disabling heating             |
+| `cooling_nighttime`            | 19:00:00 | Time when cooling nighttime schedule begins                           |
+| `heating_nighttime`            | 22:00:00 | Time when heating nighttime schedule begins                           |
+| `cooling_daytime`              | 08:00:00 | Time when cooling daytime schedule begins                             |
+| `heating_daytime`              | 07:00:00 | Time when heating daytime schedule begins                             |
 
 ## Dependencies
 
@@ -40,6 +41,7 @@ The script automatically adjusts HVAC settings based on multiple conditions:
 - `sensor.nest_learning_thermostat_temperature` - Indoor temperature
 - `binary_sensor.worktime_sensor` - Work hours detection
 - `device_tracker.seuns_iphone` - Individual presence tracking
+- `sensor.winnipeg_low_today` - Daily low temperature forecast
 - `sensor.winnipeg_high_today` - Daily high temperature forecast
 
 ### Services

@@ -7,7 +7,8 @@ sequence:
       heating_night_temp: 16
       cooling_default_temp: 23.5
       heating_default_temp: 21.5
-      forecast_threshold_temp: 18
+      forecast_threshold_low_temp: 5
+      forecast_threshold_high_temp: 15
       cooling_nighttime: "19:00:00"
       heating_nighttime: "22:00:00"
       cooling_daytime: "08:00:00"
@@ -128,13 +129,22 @@ sequence:
           - alias: Apply Heating Strategy
             choose:
               - conditions:
-                  - alias: >-
-                      If Forecast High Temperature > {{ forecast_threshold_temp
-                      }}
-                    condition: template
-                    value_template: >-
-                      {{ states('sensor.winnipeg_high_today') | float >
-                      forecast_threshold_temp }}
+                  - condition: or
+                    conditions:
+                      - alias: >-
+                          If Forecast Low Temperature >= {{
+                          forecast_threshold_low_temp }}
+                        condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_low_today') | float >=
+                          forecast_threshold_low_temp }}
+                      - alias: >-
+                          If Forecast High Temperature >= {{
+                          forecast_threshold_high_temp }}
+                        condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_high_today') | float >=
+                          forecast_threshold_high_temp }}
                 sequence:
                   - action: climate.turn_off
                     metadata: {}
