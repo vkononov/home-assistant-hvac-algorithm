@@ -27,26 +27,27 @@ sequence:
               entity_id: climate.nest_learning_thermostat
             alias: Turn off HVAC
         alias: If Family Status is Away → Turn off HVAC
+      - conditions:
+          - condition: state
+            entity_id: weather.winnipeg_forecast
+            state: unavailable
+            alias: If Weather Data Unavailable
+        sequence:
+          - action: climate.turn_off
+            metadata: {}
+            data: {}
+            target:
+              entity_id: climate.nest_learning_thermostat
+            alias: Turn off HVAC due to unavailable weather data
+        alias: If Weather Data Unavailable → Turn off HVAC
     default:
       - alias: Set HVAC temperature based on outside temperature
         if:
-          - alias: (Weather is Available and Outside is Warm) OR Indoor needs Cooling
-            condition: or
-            conditions:
-              - condition: and
-                conditions:
-                  - condition: template
-                    value_template: >-
-                      {{ states('weather.winnipeg') != 'unavailable' and states('sensor.winnipeg_temperature') != 'unknown' }}
-                    alias: Weather is Available
-                  - condition: template
-                    value_template: >-
-                      {{ states('sensor.winnipeg_temperature') | float > threshold_temp }}
-                    alias: Outside is Warm
-              - condition: template
-                value_template: >-
-                  {{ states('sensor.nest_learning_thermostat_temperature') | float > cooling_night_temp }}
-                alias: Indoor needs Cooling
+          - alias: Outside is Warm
+            condition: template
+            value_template: >-
+              {{ states('sensor.winnipeg_temperature') | float > threshold_temp
+              }}
         then:
           - alias: Apply Cooling Strategy
             choose:
@@ -106,9 +107,7 @@ sequence:
               - conditions:
                   - alias: Nighttime → Cooling
                     condition: template
-                    value_template: >-
-                      {{ now().strftime('%H:%M:%S') >= cooling_nighttime or
-                      now().strftime('%H:%M:%S') < cooling_daytime }}
+                    value_template: "{{ now().strftime('%H:%M:%S') >= cooling_nighttime or now().strftime('%H:%M:%S') < cooling_daytime }}"
                 sequence:
                   - target:
                       entity_id: climate.nest_learning_thermostat
@@ -130,27 +129,22 @@ sequence:
           - alias: Apply Heating Strategy
             choose:
               - conditions:
-                  - condition: and
+                  - condition: or
                     conditions:
-                      - condition: template
+                      - alias: >-
+                          If Forecast Low Temperature >= {{
+                          forecast_threshold_low_temp }}
+                        condition: template
                         value_template: >-
-                          {{ states('weather.winnipeg') != 'unavailable' and states('sensor.winnipeg_low_today') != 'unknown' and states('sensor.winnipeg_high_today') != 'unknown' }}
-                      - condition: or
-                        conditions:
-                          - alias: >-
-                              If Forecast Low Temperature >= {{
-                              forecast_threshold_low_temp }}
-                            condition: template
-                            value_template: >-
-                              {{ states('sensor.winnipeg_low_today') | float >=
-                              forecast_threshold_low_temp }}
-                          - alias: >-
-                              If Forecast High Temperature >= {{
-                              forecast_threshold_high_temp }}
-                            condition: template
-                            value_template: >-
-                              {{ states('sensor.winnipeg_high_today') | float >=
-                              forecast_threshold_high_temp }}
+                          {{ states('sensor.winnipeg_low_temperature') | float >=
+                          forecast_threshold_low_temp }}
+                      - alias: >-
+                          If Forecast High Temperature >= {{
+                          forecast_threshold_high_temp }}
+                        condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_high_temperature') | float >=
+                          forecast_threshold_high_temp }}
                 sequence:
                   - action: climate.turn_off
                     metadata: {}
@@ -184,9 +178,7 @@ sequence:
               - conditions:
                   - condition: template
                     alias: Nighttime → Heating
-                    value_template: >-
-                      {{ now().strftime('%H:%M:%S') >= heating_nighttime or
-                      now().strftime('%H:%M:%S') < heating_daytime }}
+                    value_template: "{{ now().strftime('%H:%M:%S') >= heating_nighttime or now().strftime('%H:%M:%S') < heating_daytime }}"
                 sequence:
                   - target:
                       entity_id: climate.nest_learning_thermostat
