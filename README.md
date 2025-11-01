@@ -18,13 +18,15 @@ The script automatically adjusts HVAC settings based on multiple conditions:
 
 | Variable                          |  Default | Description                                                           |
 |-----------------------------------|---------:|-----------------------------------------------------------------------|
-| `cooling_day_start_time`          | 08:00:00 | Time when cooling daytime schedule begins                             |
 | `cooling_day_setpoint_c`          |   23.5°C | Default cooling temperature during daytime                            |
+| `cooling_day_start_time`          | 08:00:00 | Time when cooling daytime schedule begins                             |
 | `cooling_night_setpoint_c`        |     21°C | Cooling temperature during nighttime                                  |
 | `cooling_night_start_time`        | 19:00:00 | Time when cooling nighttime schedule begins                           |
 | `cooling_work_setpoint_c`         |     25°C | Cooling temperature during work hours                                 |
-| `heating_day_start_time`          | 07:00:00 | Time when heating daytime schedule begins                             |
+| `heating_morning_setpoint_c`      |     19°C | Heating temperature during morning hours                              |
+| `heating_morning_start_time`      | 07:00:00 | Time when heating morning schedule begins                             |
 | `heating_day_setpoint_c`          |   21.5°C | Default heating temperature during daytime                            |
+| `heating_day_start_time`          | 09:00:00 | Time when heating daytime schedule begins                             |
 | `heating_evening_setpoint_c`      |     19°C | Heating temperature during evening hours                              |
 | `heating_evening_start_time`      | 19:00:00 | Time when heating evening schedule begins                             |
 | `heating_night_setpoint_c`        |     16°C | Heating temperature during late night                                 |
