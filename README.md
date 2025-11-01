@@ -8,41 +8,44 @@ The script automatically adjusts HVAC settings based on multiple conditions:
 
 - **Occupancy Control**: Turns off HVAC when family is away
 - **Weather-Based Logic**: Uses outside temperature to determine heating vs cooling strategies
-- **Schedule Awareness**: Different temperature settings for work hours and time-based nighttime schedules
-- **Energy Optimization**: Turns off cooling when outside temperature is lower than inside
-- **Smart Notifications**: Sends SMS alerts when natural cooling opportunities are available
+- **Schedule Awareness**: Different temperature settings for work hours, daytime, evening, and nighttime schedules
+- **Energy Optimization**: Turns off cooling when outside temperature is lower than inside temperature
+- **Smart Notifications**: Sends SMS alerts when natural cooling opportunities are available (outside cooler than inside)
 - **Forecast Integration**: Disables heating when daily forecast predicts warm weather
+- **Presence Detection**: Adjusts heating during work hours based on individual presence
 
 ## Configuration Variables
 
-| Variable                       |  Default | Description                                                           |
-|--------------------------------|---------:|-----------------------------------------------------------------------|
-| `threshold_temp`               |     10°C | Temperature threshold for switching between heating and cooling modes |
-| `cooling_work_temp`            |     25°C | Cooling temperature during work hours                                 |
-| `heating_work_temp`            |     16°C | Heating temperature during work hours (when away)                     |
-| `cooling_night_temp`           |     21°C | Cooling temperature during nighttime                                  |
-| `heating_night_temp`           |     16°C | Heating temperature during nighttime                                  |
-| `cooling_default_temp`         |   23.5°C | Default cooling temperature                                           |
-| `heating_default_temp`         |   21.5°C | Default heating temperature                                           |
-| `forecast_threshold_low_temp`  |      5°C | Forecast low temperature threshold for disabling heating              |
-| `forecast_threshold_high_temp` |     15°C | Forecast high temperature threshold for disabling heating             |
-| `cooling_nighttime`            | 19:00:00 | Time when cooling nighttime schedule begins                           |
-| `heating_nighttime`            | 22:00:00 | Time when heating nighttime schedule begins                           |
-| `cooling_daytime`              | 08:00:00 | Time when cooling daytime schedule begins                             |
-| `heating_daytime`              | 07:00:00 | Time when heating daytime schedule begins                             |
+| Variable                          |  Default | Description                                                           |
+|-----------------------------------|---------:|-----------------------------------------------------------------------|
+| `cooling_day_start_time`          | 08:00:00 | Time when cooling daytime schedule begins                             |
+| `cooling_day_setpoint_c`          |   23.5°C | Default cooling temperature during daytime                            |
+| `cooling_night_setpoint_c`        |     21°C | Cooling temperature during nighttime                                  |
+| `cooling_night_start_time`        | 19:00:00 | Time when cooling nighttime schedule begins                           |
+| `cooling_work_setpoint_c`         |     25°C | Cooling temperature during work hours                                 |
+| `heating_day_start_time`          | 07:00:00 | Time when heating daytime schedule begins                             |
+| `heating_day_setpoint_c`          |   21.5°C | Default heating temperature during daytime                            |
+| `heating_evening_setpoint_c`      |     19°C | Heating temperature during evening hours                              |
+| `heating_evening_start_time`      | 19:00:00 | Time when heating evening schedule begins                             |
+| `heating_night_setpoint_c`        |     16°C | Heating temperature during late night                                 |
+| `heating_night_start_time`        | 22:00:00 | Time when heating nighttime schedule begins                           |
+| `heating_work_setpoint_c`         |     16°C | Heating temperature during work hours (when away)                     |
+| `seasonal_mode_switch_temp_c`     |     10°C | Temperature threshold for switching between heating and cooling modes |
+| `forecast_high_warm_threshold_c`  |     15°C | Forecast high temperature threshold for disabling heating             |
+| `forecast_low_warm_threshold_c`   |      5°C | Forecast low temperature threshold for disabling heating              |
 
 ## Dependencies
 
 ### Required Entities
 - `climate.nest_learning_thermostat` - Main thermostat control
 - `binary_sensor.family_status` - Home/away occupancy detection
-- `weather.winnipeg` - Weather data source
+- `weather.winnipeg_forecast` - Weather data source
 - `sensor.winnipeg_temperature` - Current outdoor temperature
 - `sensor.nest_learning_thermostat_temperature` - Indoor temperature
 - `binary_sensor.worktime_sensor` - Work hours detection
-- `device_tracker.seuns_iphone` - Individual presence tracking
-- `sensor.winnipeg_low_today` - Daily low temperature forecast
-- `sensor.winnipeg_high_today` - Daily high temperature forecast
+- `device_tracker.seunphone_unifi` - Individual presence tracking for Seun
+- `sensor.winnipeg_low_temperature` - Daily low temperature forecast
+- `sensor.winnipeg_high_temperature` - Daily high temperature forecast
 
 ### Services
 - `notify.mobile_app_vadimiphone` - SMS notification service for cooling alerts
