@@ -5,16 +5,17 @@ sequence:
       cooling_night_setpoint_c: 21
       cooling_night_start_time: "19:00:00"
       cooling_work_setpoint_c: 25
-      heating_morning_setpoint_c: 19
-      heating_morning_start_time: "07:00:00"
+      heating_morning_setpoint_c: 20
+      heating_morning_start_time: "06:00:00"
       heating_day_setpoint_c: 21.5
       heating_day_start_time: "09:00:00"
       heating_evening_setpoint_c: 19
-      heating_evening_start_time: "19:00:00"
+      heating_evening_start_time: "20:00:00"
       heating_night_setpoint_c: 16
       heating_night_start_time: "22:00:00"
       heating_work_setpoint_c: 16
       seasonal_mode_switch_temp_c: 10
+      seasonal_deep_cold_switch_temp_c: -10
       forecast_high_warm_threshold_c: 15
       forecast_low_warm_threshold_c: 5
     alias: Define Variables
@@ -63,12 +64,9 @@ sequence:
                 sequence:
                   - alias: Send SMS to open windows when natural cooling is possible
                     if:
-                      - condition: device
-                        device_id: d9dd33299705b38f6cd49a948c1bbd19
-                        domain: climate
-                        entity_id: 4e971f8b9c7a08e3417bd5b5e6c271e0
-                        type: is_hvac_mode
-                        hvac_mode: cool
+                      - condition: state
+                        entity_id: climate.nest_learning_thermostat
+                        state: cool
                         alias: Nest Learning Thermostat is set to COOL
                       - alias: Indoor temperature > {{ cooling_night_setpoint_c }}
                         condition: template
@@ -167,13 +165,30 @@ sequence:
                     value_template: "{{ states('device_tracker.seunphone_unifi') != 'home' }}"
                     alias: Seun is Away
                 sequence:
-                  - target:
-                      entity_id: climate.nest_learning_thermostat
-                    data:
-                      temperature: "{{ heating_work_setpoint_c }}"
-                      hvac_mode: heat
-                    action: climate.set_temperature
-                    alias: Set HVAC to {{ heating_work_setpoint_c }}
+                  - if:
+                      - condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_temperature') | float <
+                          seasonal_deep_cold_switch_temp_c }}
+                        alias: >-
+                          Outside is colder than {{
+                          seasonal_deep_cold_switch_temp_c }}
+                    then:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_day_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_day_setpoint_c }}
+                    else:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_work_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_work_setpoint_c }}
                 alias: >-
                   Worktime When Seun is Away → Set HVAC to {{
                   heating_work_setpoint_c }}
@@ -182,39 +197,74 @@ sequence:
                     condition: template
                     value_template: >-
                       {{ now().strftime('%H:%M:%S') >=
-                      heating_morning_start_time and now().strftime('%H:%M:%S') <
-                      heating_day_start_time }}
+                      heating_morning_start_time and now().strftime('%H:%M:%S')
+                      < heating_day_start_time }}
                 sequence:
-                  - target:
-                      entity_id: climate.nest_learning_thermostat
-                    data:
-                      temperature: "{{ heating_morning_setpoint_c }}"
-                      hvac_mode: heat
-                    action: climate.set_temperature
-                    alias: Set HVAC to {{ heating_morning_setpoint_c }}
+                  - if:
+                      - condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_temperature') | float <
+                          seasonal_deep_cold_switch_temp_c }}
+                        alias: >-
+                          Outside is colder than {{
+                          seasonal_deep_cold_switch_temp_c }}
+                    then:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_day_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_day_setpoint_c }}
+                    else:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_morning_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_morning_setpoint_c }}
                 alias: Morning → Set HVAC to {{ heating_morning_setpoint_c }}
               - conditions:
                   - alias: Evening Time → Heating
                     condition: template
                     value_template: >-
                       {{ now().strftime('%H:%M:%S') >=
-                      heating_evening_start_time and now().strftime('%H:%M:%S') <
-                      heating_night_start_time }}
+                      heating_evening_start_time and now().strftime('%H:%M:%S')
+                      < heating_night_start_time }}
                 sequence:
-                  - target:
-                      entity_id: climate.nest_learning_thermostat
-                    data:
-                      temperature: "{{ heating_evening_setpoint_c }}"
-                      hvac_mode: heat
-                    action: climate.set_temperature
-                    alias: Set HVAC to {{ heating_evening_setpoint_c }}
+                  - if:
+                      - condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_temperature') | float <
+                          seasonal_deep_cold_switch_temp_c }}
+                        alias: >-
+                          Outside is colder than {{
+                          seasonal_deep_cold_switch_temp_c }}
+                    then:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_day_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_day_setpoint_c }}
+                    else:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ heating_evening_setpoint_c }}"
+                          hvac_mode: heat
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ heating_evening_setpoint_c }}
                 alias: Evening → Set HVAC to {{ heating_evening_setpoint_c }}
               - conditions:
                   - condition: template
                     alias: Nighttime → Heating
                     value_template: >-
                       {{ now().strftime('%H:%M:%S') >= heating_night_start_time
-                      or now().strftime('%H:%M:%S') < heating_morning_start_time }}
+                      or now().strftime('%H:%M:%S') < heating_morning_start_time
+                      }}
                 sequence:
                   - target:
                       entity_id: climate.nest_learning_thermostat
