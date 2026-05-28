@@ -92,7 +92,7 @@ flowchart TD
 - `sensor.winnipeg_high_temperature` - Daily high temperature forecast
 - `sensor.winnipeg_low_temperature` - Daily low temperature forecast
 - `sensor.winnipeg_wind_speed` - Current wind speed in km/h
-- `sensor.sun_next_setting` - Timestamp of the next sunset (used to detect whether today's sunset has already passed)
+- `sun.sun` - Sun position (used to detect whether the sun is currently below the horizon)
 - `sensor.nest_learning_thermostat_temperature` - Indoor temperature
 - `binary_sensor.worktime_sensor` - Work hours detection
 - `device_tracker.seunphone_unifi` - Individual presence tracking for Seun
