@@ -1,10 +1,10 @@
 sequence:
   - variables:
-      cooling_day_setpoint_c: 23.5
+      cooling_day_setpoint_c: 21.5
       cooling_day_start_time: "08:00:00"
       cooling_night_setpoint_c: 21
       cooling_night_start_time: "19:00:00"
-      cooling_work_setpoint_c: 25
+      cooling_work_setpoint_c: 23.5
       heating_morning_setpoint_c: 20
       heating_morning_start_time: "06:00:00"
       heating_day_setpoint_c: 21.5
