@@ -19,6 +19,10 @@ sequence:
       forecast_high_warm_threshold_c: 15
       forecast_low_warm_threshold_c: 5
       forecast_wild_heat_threshold_c: 30
+      natural_cooling_wind_threshold_kmh: 10
+      sun_has_set: >-
+        {{ as_local(as_datetime(states('sensor.sun_next_setting'))).date() >
+        now().date() }}
     alias: Define Variables
   - choose:
       - conditions:
@@ -58,10 +62,19 @@ sequence:
           - alias: Apply Cooling Strategy
             choose:
               - conditions:
-                  - condition: numeric_state
-                    entity_id: sensor.winnipeg_temperature
-                    below: sensor.nest_learning_thermostat_temperature
-                    alias: If outside temperature < inside temperature
+                  - alias: Outside temperature < {{ cooling_night_setpoint_c }}°C
+                    condition: template
+                    value_template: >-
+                      {{ states('sensor.winnipeg_temperature') | float <
+                      cooling_night_setpoint_c | float }}
+                  - alias: Sun has set
+                    condition: template
+                    value_template: "{{ sun_has_set }}"
+                  - alias: Wind speed > {{ natural_cooling_wind_threshold_kmh }} km/h
+                    condition: template
+                    value_template: >-
+                      {{ states('sensor.winnipeg_wind_speed') | float >
+                      natural_cooling_wind_threshold_kmh }}
                 sequence:
                   - alias: Send SMS to open windows when natural cooling is possible
                     if:
@@ -79,12 +92,14 @@ sequence:
                       - data:
                           title: Open windows to cool house
                           message: >-
-                            AC is off. Outdoor temp ({{
+                            AC is off. Outdoor ({{
                             states('sensor.winnipeg_temperature') | float |
-                            round(1) }}°C) is lower than indoor ({{
+                            round(1) }}°C) is below {{ cooling_night_setpoint_c
+                            }}°C, the sun has set, and wind is {{
+                            states('sensor.winnipeg_wind_speed') | float |
+                            round(1) }} km/h. Indoor ({{
                             states('sensor.nest_learning_thermostat_temperature')
-                            | float | round(1) }}°C), which is also above
-                            desired temp ({{ cooling_night_setpoint_c }}°C).
+                            | float | round(1) }}°C) is still above target.
                         action: notify.mobile_app_vadimiphone
                         alias: Send SMS to open windows to cool the house
                   - action: climate.turn_off
@@ -93,7 +108,7 @@ sequence:
                     target:
                       entity_id: climate.nest_learning_thermostat
                     alias: Turn off HVAC
-                alias: Outside Cooler than Inside → Turn off HVAC
+                alias: Natural Cooling Conditions Met → Turn off HVAC
               - conditions:
                   - condition: state
                     entity_id: binary_sensor.worktime_sensor
