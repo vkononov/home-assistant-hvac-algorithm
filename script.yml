@@ -20,9 +20,6 @@ sequence:
       forecast_low_warm_threshold_c: 5
       forecast_wild_heat_threshold_c: 30
       natural_cooling_wind_threshold_kmh: 10
-      sun_has_set: >-
-        {{ as_local(as_datetime(states('sensor.sun_next_setting'))).date() >
-        now().date() }}
     alias: Define Variables
   - choose:
       - conditions:
@@ -69,7 +66,7 @@ sequence:
                       cooling_night_setpoint_c | float }}
                   - alias: Sun has set
                     condition: template
-                    value_template: "{{ sun_has_set }}"
+                    value_template: "{{ states('sun.sun') == 'below_horizon' }}"
                   - alias: Wind speed > {{ natural_cooling_wind_threshold_kmh }} km/h
                     condition: template
                     value_template: >-
