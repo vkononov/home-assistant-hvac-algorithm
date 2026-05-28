@@ -18,6 +18,7 @@ sequence:
       seasonal_deep_cold_switch_temp_c: -10
       forecast_high_warm_threshold_c: 15
       forecast_low_warm_threshold_c: 5
+      forecast_wild_heat_threshold_c: 30
     alias: Define Variables
   - choose:
       - conditions:
@@ -98,13 +99,30 @@ sequence:
                     entity_id: binary_sensor.worktime_sensor
                     state: "on"
                 sequence:
-                  - target:
-                      entity_id: climate.nest_learning_thermostat
-                    data:
-                      temperature: "{{ cooling_work_setpoint_c }}"
-                      hvac_mode: cool
-                    action: climate.set_temperature
-                    alias: Set HVAC to {{ cooling_work_setpoint_c }}
+                  - if:
+                      - condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_high_temperature') | float
+                          >= forecast_wild_heat_threshold_c }}
+                        alias: >-
+                          Forecast high is at least {{
+                          forecast_wild_heat_threshold_c }}
+                    then:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ cooling_day_setpoint_c }}"
+                          hvac_mode: cool
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ cooling_day_setpoint_c }}
+                    else:
+                      - target:
+                          entity_id: climate.nest_learning_thermostat
+                        data:
+                          temperature: "{{ cooling_work_setpoint_c }}"
+                          hvac_mode: cool
+                        action: climate.set_temperature
+                        alias: Set HVAC to {{ cooling_work_setpoint_c }}
                 alias: Worktime → Set HVAC to {{ cooling_work_setpoint_c }}
               - conditions:
                   - alias: Nighttime → Cooling
