@@ -16,6 +16,8 @@ sequence:
       heating_work_setpoint_c: 16
       seasonal_mode_switch_temp_c: 10
       seasonal_deep_cold_switch_temp_c: -10
+      forecast_low_cool_threshold_c: 19
+      forecast_high_cool_threshold_c: 24
       forecast_high_warm_threshold_c: 15
       forecast_low_warm_threshold_c: 5
       forecast_wild_heat_threshold_c: 30
@@ -58,6 +60,31 @@ sequence:
         then:
           - alias: Apply Cooling Strategy
             choose:
+              - conditions:
+                  - condition: or
+                    conditions:
+                      - alias: >-
+                          If Forecast Low Temperature <= {{
+                          forecast_low_cool_threshold_c }}
+                        condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_low_temperature') | float
+                          <= forecast_low_cool_threshold_c }}
+                      - alias: >-
+                          If Forecast High Temperature <= {{
+                          forecast_high_cool_threshold_c }}
+                        condition: template
+                        value_template: >-
+                          {{ states('sensor.winnipeg_high_temperature') | float
+                          <= forecast_high_cool_threshold_c }}
+                sequence:
+                  - action: climate.turn_off
+                    metadata: {}
+                    data: {}
+                    target:
+                      entity_id: climate.nest_learning_thermostat
+                    alias: Turn off HVAC
+                alias: Weather Forecast is Cool → Turn off HVAC
               - conditions:
                   - alias: Outside temperature < {{ cooling_night_setpoint_c }}°C
                     condition: template
