@@ -110,7 +110,7 @@ sequence:
                         condition: template
                         value_template: >-
                           {{
-                          states('sensor.nest_learning_thermostat_temperature')
+                          states('sensor.usl_environmental_upstairs_temperature_2')
                           | float > cooling_night_setpoint_c }}
                     then:
                       - data:
