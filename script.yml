@@ -61,7 +61,7 @@ sequence:
           - alias: Apply Cooling Strategy
             choose:
               - conditions:
-                  - condition: or
+                  - condition: and
                     conditions:
                       - alias: >-
                           If Forecast Low Temperature <= {{
